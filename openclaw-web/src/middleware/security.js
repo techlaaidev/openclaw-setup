@@ -17,19 +17,15 @@ export const securityHeaders = {
     }
   },
   crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "same-origin" },
-  crossOriginOpenerPolicy: { policy: "same-origin" },
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: false, // Disabled for HTTP
   dnsPrefetchControl: { allow: false },
   frameguard: { action: 'sameorigin' },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
-  },
+  hsts: false, // Disabled for HTTP (only works with HTTPS)
   ieNoOpen: {},
   noSniff: {},
-  originAgentCluster: {},
+  originAgentCluster: false, // Disabled for HTTP
   permittedCrossDomainPolicies: { permittedPolicies: "none" },
-  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  referrerPolicy: { policy: "no-referrer-when-downgrade" },
   xssFilter: {}
 };
