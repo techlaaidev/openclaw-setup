@@ -299,8 +299,9 @@ export class ProcessManager {
    */
   async isRunning() {
     try {
-      // Check for process
-      const { stdout } = await execAsync('pgrep -f "openclaw"');
+      // Check for openclaw gateway process specifically
+      // Exclude nodemon, vite, and other openclaw-web processes
+      const { stdout } = await execAsync('pgrep -f "openclaw.gateway|openclaw gateway"');
       const pids = stdout.trim().split('\n').filter(p => p);
       return pids.length > 0 ? pids : false;
     } catch {
