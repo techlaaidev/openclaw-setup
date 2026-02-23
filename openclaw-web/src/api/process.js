@@ -127,4 +127,14 @@ router.get('/systemd/available', async (req, res) => {
   }
 });
 
+// Get diagnostics information
+router.get('/diagnostics', async (req, res) => {
+  try {
+    const diagnostics = await processManager.getDiagnostics();
+    res.json(diagnostics);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

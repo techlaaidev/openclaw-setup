@@ -72,14 +72,130 @@ export class ProcessManager {
   }
 
   /**
-   * Get OpenClaw binary path
+   * Check if command exists in PATH
    */
-  getOpenClawCommand() {
-    // Check for uv (from ClawX bundle)
-    const uvPath = path.join(this.openclawPath, 'uv');
-    const openclawPath = path.join(this.openclawPath, 'openclaw');
+  async commandExists(command) {
+    try {
+      await execAsync(`which ${command}`);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
-    return { uvPath, openclawPath };
+  /**
+   * Check if file exists
+   */
+  async fileExists(filePath) {
+    try {
+      await fs.access(filePath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Detect OpenClaw installation type
+   * Returns: 'bundle' | 'system' | null
+   */
+  async detectInstallation() {
+    // Check for ClawX bundle first (backward compatibility)
+    const bundleUvPath = path.join(this.openclawPath, 'uv');
+    const bundleOpenclawPath = path.join(this.openclawPath, 'openclaw');
+
+    const hasBundleUv = await this.fileExists(bundleUvPath);
+    const hasBundleOpenclaw = await this.fileExists(bundleOpenclawPath);
+
+    if (hasBundleUv && hasBundleOpenclaw) {
+      return 'bundle';
+    }
+
+    // Check for system installation
+    const hasSystemOpenclaw = await this.commandExists('openclaw');
+
+    if (hasSystemOpenclaw) {
+      return 'system';
+    }
+
+    return null;
+  }
+
+  /**
+   * Get OpenClaw command based on installation type
+   */
+  async getOpenClawCommand() {
+    const installType = await this.detectInstallation();
+
+    if (installType === 'bundle') {
+      // ClawX bundle: use uv run openclaw
+      return {
+        type: 'bundle',
+        command: path.join(this.openclawPath, 'uv'),
+        args: ['run', 'openclaw', 'gateway'],
+        cwd: this.openclawPath
+      };
+    } else if (installType === 'system') {
+      // System installation: use openclaw directly
+      return {
+        type: 'system',
+        command: 'openclaw',
+        args: ['gateway'],
+        cwd: this.openclawPath
+      };
+    } else {
+      throw new Error('OpenClaw not found. Please install OpenClaw first.\n\nInstallation options:\n- npm install -g openclaw\n- brew install openclaw\n- Download from https://github.com/ValueCell-ai/openclaw');
+    }
+  }
+
+  /**
+   * Get diagnostics information
+   */
+  async getDiagnostics() {
+    const installType = await this.detectInstallation();
+
+    const diagnostics = {
+      installationType: installType,
+      openclawPath: this.openclawPath,
+      checks: {}
+    };
+
+    // Check bundle installation
+    const bundleUvPath = path.join(this.openclawPath, 'uv');
+    const bundleOpenclawPath = path.join(this.openclawPath, 'openclaw');
+    diagnostics.checks.bundleUv = await this.fileExists(bundleUvPath);
+    diagnostics.checks.bundleOpenclaw = await this.fileExists(bundleOpenclawPath);
+
+    // Check system installation
+    diagnostics.checks.systemOpenclaw = await this.commandExists('openclaw');
+    diagnostics.checks.systemUv = await this.commandExists('uv');
+
+    // Get paths
+    try {
+      const { stdout: openclawWhich } = await execAsync('which openclaw');
+      diagnostics.paths = { openclaw: openclawWhich.trim() };
+    } catch {
+      diagnostics.paths = { openclaw: null };
+    }
+
+    try {
+      const { stdout: uvWhich } = await execAsync('which uv');
+      diagnostics.paths.uv = uvWhich.trim();
+    } catch {
+      diagnostics.paths.uv = null;
+    }
+
+    // Get version if available
+    if (diagnostics.checks.systemOpenclaw) {
+      try {
+        const { stdout } = await execAsync('openclaw --version');
+        diagnostics.version = stdout.trim();
+      } catch {
+        diagnostics.version = null;
+      }
+    }
+
+    return diagnostics;
   }
 
   /**
@@ -273,14 +389,8 @@ export class ProcessManager {
   async start() {
     await this.mutex.lock();
     try {
-      const { uvPath, openclawPath } = this.getOpenClawCommand();
-
-      // Check if OpenClaw exists
-      try {
-        await fs.access(openclawPath);
-      } catch {
-        throw new Error('OpenClaw not found. Please install OpenClaw first.');
-      }
+      // Get command based on installation type
+      const commandInfo = await this.getOpenClawCommand();
 
       // Check if already running
       if (await this.isRunning()) {
@@ -289,10 +399,10 @@ export class ProcessManager {
 
       return new Promise((resolve, reject) => {
         const child = spawn(
-          uvPath,
-          ['run', 'openclaw', 'gateway'],
+          commandInfo.command,
+          commandInfo.args,
           {
-            cwd: this.openclawPath,
+            cwd: commandInfo.cwd,
             detached: true,
             stdio: ['ignore', 'pipe', 'pipe'],
             env: {
@@ -310,6 +420,9 @@ export class ProcessManager {
         this.startTime = Date.now();
         this.status = 'starting';
 
+        console.log(`[OpenClaw] Starting with ${commandInfo.type} installation`);
+        console.log(`[OpenClaw] Command: ${commandInfo.command} ${commandInfo.args.join(' ')}`);
+
         child.stdout.on('data', (data) => {
           console.log('[OpenClaw]', data.toString().trim());
         });
@@ -320,6 +433,7 @@ export class ProcessManager {
 
         child.on('error', (error) => {
           this.status = 'error';
+          console.error('[OpenClaw] Spawn error:', error);
           reject(error);
         });
 
@@ -327,16 +441,17 @@ export class ProcessManager {
           this.status = code === 0 ? 'stopped' : 'crashed';
           this.process = null;
           this.pid = null;
-          console.log(`OpenClaw exited with code ${code}`);
+          console.log(`[OpenClaw] Exited with code ${code}`);
         });
 
         // Wait a bit and check if started
         setTimeout(async () => {
           if (await this.isRunning()) {
             this.status = 'running';
-            resolve({ success: true, pid: this.pid });
+            console.log(`[OpenClaw] Started successfully (PID: ${this.pid})`);
+            resolve({ success: true, pid: this.pid, type: commandInfo.type });
           } else {
-            reject(new Error('Failed to start OpenClaw'));
+            reject(new Error('Failed to start OpenClaw. Check logs for details.'));
           }
         }, 3000);
       });
