@@ -11,6 +11,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    host: '0.0.0.0', // Expose to network for VPS/Armbian access
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
