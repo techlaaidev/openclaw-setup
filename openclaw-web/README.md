@@ -28,8 +28,8 @@ Web-based management interface for OpenClaw AI Assistant on Armbian devices.
 git clone https://github.com/yourusername/openclaw-web.git
 cd openclaw-web
 
-# Run installer
-sudo ./scripts/install.sh
+# Run installer (builds frontend automatically)
+sudo ./scripts/install-simple.sh
 ```
 
 Access dashboard at:
@@ -42,6 +42,17 @@ Access dashboard at:
 - Password: `admin123`
 
 ⚠️ **Change password immediately after first login!**
+
+### Troubleshooting Installation
+
+If you see "frontend/dist/index.html not found" error:
+
+```bash
+# Quick fix
+sudo /opt/openclaw-web/scripts/update-frontend.sh
+```
+
+See [docs/QUICK-FIX-FRONTEND.md](docs/QUICK-FIX-FRONTEND.md) for details.
 
 ## Development
 
@@ -212,8 +223,10 @@ See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed troubleshooting.
 ## Documentation
 
 - [Deployment Guide](docs/DEPLOYMENT.md) - Installation and configuration
-- [API Documentation](docs/API.md) - API reference (coming soon)
-- [Architecture](docs/ARCHITECTURE.md) - System design (coming soon)
+- [Quick Fix: Frontend Build](docs/QUICK-FIX-FRONTEND.md) - Fix frontend build issues
+- [ClawX Comparison](docs/CLAWX-COMPARISON.md) - Feature comparison with ClawX
+- [Roadmap to Parity](docs/ROADMAP-TO-CLAWX-PARITY.md) - 6-week roadmap to ClawX features
+- [Scripts README](scripts/README.md) - Installation scripts guide
 
 ## Tech Stack
 

@@ -17,17 +17,20 @@ This guide covers deploying OpenClaw Web Dashboard on Armbian/Debian-based syste
 ### One-Line Install
 
 ```bash
-cd openclaw-web && sudo ./scripts/install.sh
+cd openclaw-web && sudo ./scripts/install-simple.sh
 ```
 
 This will:
-- Install Node.js 20
 - Create `openclaw` system user
+- Build frontend React application
 - Install application to `/opt/openclaw-web`
+- Install backend dependencies
 - Configure systemd service
-- Set up Avahi mDNS
-- Configure firewall (UFW)
+- Set up Avahi mDNS (optional)
+- Configure firewall (UFW, optional)
 - Start the dashboard
+
+**Note:** The installer now builds the frontend automatically. For existing installations with frontend issues, see [QUICK-FIX-FRONTEND.md](./QUICK-FIX-FRONTEND.md).
 
 ## Manual Installation
 
@@ -50,6 +53,14 @@ sudo useradd -r -s /bin/bash -d /home/openclaw -m openclaw
 sudo mkdir -p /opt/openclaw-web
 sudo cp -r . /opt/openclaw-web/
 cd /opt/openclaw-web
+
+# Build frontend
+cd frontend
+sudo npm install
+sudo npm run build
+cd ..
+
+# Install backend dependencies
 sudo npm ci --production
 ```
 
@@ -210,6 +221,16 @@ sudo journalctl -u openclaw-dashboard -n 50
 sudo systemctl status openclaw-dashboard
 curl http://localhost:3000/api/system/health
 ```
+
+**Frontend not found error:**
+If you see "ENOENT: no such file or directory, stat '/opt/openclaw-web/frontend/dist/index.html'":
+
+```bash
+# Quick fix - use the update script
+sudo /opt/openclaw-web/scripts/update-frontend.sh
+```
+
+See [QUICK-FIX-FRONTEND.md](./QUICK-FIX-FRONTEND.md) for detailed instructions.
 
 **Check firewall:**
 ```bash

@@ -35,17 +35,28 @@ if [ -d "$INSTALL_DIR" ]; then
   mv "$INSTALL_DIR" "${INSTALL_DIR}.backup.$(date +%Y%m%d-%H%M%S)"
 fi
 
+# Build frontend first (before copying)
+echo "Building frontend locally..."
+cd frontend
+if [ ! -d "node_modules" ]; then
+  echo "Installing frontend dependencies..."
+  npm ci 2>/dev/null || npm install
+fi
+echo "Building React application..."
+npm run build
+cd ..
+
 # Copy application files
 mkdir -p "$INSTALL_DIR"
 cp -r . "$INSTALL_DIR/"
 cd "$INSTALL_DIR"
 
-# Install dependencies (skip if already installed)
+# Install backend dependencies
 if [ ! -d "node_modules" ]; then
-  echo "Installing npm dependencies..."
+  echo "Installing backend dependencies..."
   npm ci --production 2>/dev/null || npm install --production
 else
-  echo "✓ Dependencies already installed"
+  echo "✓ Backend dependencies already installed"
 fi
 
 # Create necessary directories
