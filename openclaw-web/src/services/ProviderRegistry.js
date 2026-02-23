@@ -134,11 +134,12 @@ const REGISTRY = {
 };
 
 // Provider UI metadata (frontend)
+// Note: Icons are now handled by Lucide components in frontend
 export const PROVIDER_TYPE_INFO = [
   {
     id: 'anthropic',
     name: 'Anthropic',
-    icon: '🤖',
+    iconType: 'Bot', // Lucide icon name
     placeholder: 'sk-ant-api03-...',
     model: 'Claude',
     requiresApiKey: true,
@@ -146,7 +147,7 @@ export const PROVIDER_TYPE_INFO = [
   {
     id: 'openai',
     name: 'OpenAI',
-    icon: '💚',
+    iconType: 'Sparkles', // Lucide icon name
     placeholder: 'sk-proj-...',
     model: 'GPT',
     requiresApiKey: true,
@@ -154,7 +155,7 @@ export const PROVIDER_TYPE_INFO = [
   {
     id: 'google',
     name: 'Google',
-    icon: '🔷',
+    iconType: 'Gem', // Lucide icon name
     placeholder: 'AIza...',
     model: 'Gemini',
     requiresApiKey: true,
@@ -162,7 +163,7 @@ export const PROVIDER_TYPE_INFO = [
   {
     id: 'openrouter',
     name: 'OpenRouter',
-    icon: '🌐',
+    iconType: 'Globe', // Lucide icon name
     placeholder: 'sk-or-v1-...',
     model: 'Multi-Model',
     requiresApiKey: true,
@@ -170,7 +171,7 @@ export const PROVIDER_TYPE_INFO = [
   {
     id: 'moonshot',
     name: 'Moonshot (CN)',
-    icon: '🌙',
+    iconType: 'Moon', // Lucide icon name
     placeholder: 'sk-...',
     model: 'Kimi',
     requiresApiKey: true,
@@ -180,7 +181,7 @@ export const PROVIDER_TYPE_INFO = [
   {
     id: 'siliconflow',
     name: 'SiliconFlow (CN)',
-    icon: '🌊',
+    iconType: 'Waves', // Lucide icon name
     placeholder: 'sk-...',
     model: 'Multi-Model',
     requiresApiKey: true,
@@ -190,7 +191,7 @@ export const PROVIDER_TYPE_INFO = [
   {
     id: 'ollama',
     name: 'Ollama',
-    icon: '🦙',
+    iconType: 'Server', // Lucide icon name
     placeholder: 'Not required',
     model: 'Local',
     requiresApiKey: false,
@@ -201,7 +202,7 @@ export const PROVIDER_TYPE_INFO = [
   {
     id: 'custom',
     name: 'Custom',
-    icon: '⚙️',
+    iconType: 'Settings', // Lucide icon name
     placeholder: 'API key...',
     model: 'Custom',
     requiresApiKey: true,

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, AlertCircle } from 'lucide-react';
+import { ProviderIcon } from '../lib/providerIcons';
 
 export default function ProviderForm({ provider, types, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -106,7 +107,9 @@ export default function ProviderForm({ provider, types, onSave, onCancel }) {
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <div className="text-2xl mb-1">{type.icon}</div>
+                  <div className="flex justify-center mb-2">
+                    <ProviderIcon type={type.id} className="w-6 h-6 text-primary-500" />
+                  </div>
                   <div className="text-xs font-medium text-gray-900">{type.name}</div>
                 </button>
               ))}

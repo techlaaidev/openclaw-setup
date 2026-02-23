@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { providersApi } from '../services/api';
 import { Plus, Edit, Trash2, PlusCircle, Check, Sparkles } from 'lucide-react';
 import ProviderForm from '../components/ProviderForm';
+import { ProviderIcon } from '../lib/providerIcons';
 
 export default function Providers() {
   const [providers, setProviders] = useState([]);
@@ -88,8 +89,8 @@ export default function Providers() {
       <div className="card card-hover p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center text-2xl mr-3">
-              {typeInfo?.icon}
+            <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center mr-3">
+              <ProviderIcon type={provider.type} className="w-6 h-6 text-primary-500" />
             </div>
             <div>
               <h3 className="text-lg font-display font-semibold text-gray-900">{provider.name}</h3>
@@ -175,8 +176,8 @@ export default function Providers() {
       {/* Kimi Featured Card */}
       <div className="card p-6 border-2 border-primary-200 bg-primary-50">
         <div className="flex items-center">
-          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-4xl mr-4 shadow-sm">
-            🌙
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mr-4 shadow-sm">
+            <ProviderIcon type="moonshot" className="w-10 h-10 text-primary-500" />
           </div>
           <div className="flex-1">
             <div className="flex items-center mb-1">
