@@ -8,6 +8,7 @@ import {
   Cog,
   X,
   Terminal,
+  LogOut,
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { authApi } from '../services/api';
@@ -37,28 +38,18 @@ export default function Sidebar({ isOpen, onClose }) {
 
   return (
     <>
-      {/* Mobile close button */}
-      {isOpen && (
-        <button
-          onClick={onClose}
-          className="lg:hidden absolute top-4 right-4 p-2 rounded-md hover:bg-gray-100"
-        >
-          <X className="w-6 h-6" />
-        </button>
-      )}
-
       {/* Sidebar */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-white border-r transform transition-transform duration-200
+          fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out
           lg:translate-x-0
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
         {/* Logo */}
-        <div className="flex items-center h-16 px-6 border-b">
-          <Terminal className="w-8 h-8 text-blue-600" />
-          <span className="ml-2 text-xl font-bold text-gray-900">OpenClaw</span>
+        <div className="flex items-center h-16 px-6 border-b border-gray-200">
+          <Terminal className="w-8 h-8 text-primary" />
+          <span className="ml-3 text-xl font-display font-bold text-gray-900">OpenClaw</span>
         </div>
 
         {/* Navigation */}
@@ -69,25 +60,29 @@ export default function Sidebar({ isOpen, onClose }) {
               to={item.path}
               onClick={onClose}
               className={({ isActive }) => `
-                flex items-center px-4 py-3 rounded-lg transition-colors
+                flex items-center px-4 py-3 rounded-lg transition-smooth group
                 ${isActive
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-primary-50 text-primary-700 font-medium'
+                  : 'text-gray-700 hover:bg-gray-50'
                 }
               `}
             >
-              <item.icon className="w-5 h-5" />
-              <span className="ml-3">{item.label}</span>
+              {({ isActive }) => (
+                <>
+                  <item.icon className={`w-5 h-5 transition-smooth ${isActive ? 'text-primary-700' : 'text-gray-500 group-hover:text-gray-700'}`} />
+                  <span className="ml-3">{item.label}</span>
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
 
         {/* User section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t">
-          <div className="flex items-center justify-between">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center min-w-0">
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                <span className="text-sm font-medium text-blue-700">
+              <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                <span className="text-sm font-display font-semibold text-primary-700">
                   {user?.username?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
@@ -100,13 +95,14 @@ export default function Sidebar({ isOpen, onClose }) {
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className="px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
-            >
-              Logout
-            </button>
           </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-smooth"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </button>
         </div>
       </aside>
     </>

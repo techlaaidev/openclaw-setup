@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { channelsApi } from '../services/api';
-import { Plus, Edit, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, MessageSquare } from 'lucide-react';
 
 export default function Channels() {
   const [channels, setChannels] = useState([]);
@@ -54,45 +54,70 @@ export default function Channels() {
   const getTypeInfo = (type) => types.find(t => t.id === type) || {};
 
   if (loading) {
-    return <div className="p-6">Loading...</div>;
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="card p-6 animate-pulse">
+              <div className="h-6 bg-gray-200 rounded mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in">
+      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Channels</h1>
+          <h1 className="text-3xl font-display font-bold text-gray-900 mb-2">Channels</h1>
           <p className="text-gray-600">Manage messaging platforms (Telegram, Zalo, WhatsApp)</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
+          className="btn btn-primary flex items-center"
         >
           <Plus className="w-5 h-5 mr-2" /> Add Channel
         </button>
       </div>
 
       {/* Channel Types */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {types.map(type => {
           const hasChannel = channels.some(c => c.type === type.id);
           return (
-            <div key={type.id} className={`rounded-xl p-6 border-2 ${hasChannel ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
-              <div className="flex items-center mb-3">
-                <span className="text-3xl mr-3">{type.icon}</span>
-                <div>
-                  <h3 className="font-semibold text-lg">{type.name}</h3>
-                  <p className="text-sm text-gray-600">{type.description}</p>
+            <div
+              key={type.id}
+              className={`card p-6 border-2 transition-smooth ${
+                hasChannel
+                  ? 'border-success-200 bg-success-50'
+                  : 'border-gray-200 hover:border-primary-200'
+              }`}
+            >
+              <div className="flex items-start mb-4">
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-3xl mr-3 shadow-sm">
+                  {type.icon}
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-display font-semibold text-lg text-gray-900">{type.name}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{type.description}</p>
                 </div>
               </div>
               {hasChannel ? (
-                <p className="text-green-600 text-sm">✓ Configured</p>
+                <div className="flex items-center text-success-700">
+                  <div className="w-2 h-2 bg-success-500 rounded-full mr-2"></div>
+                  <span className="text-sm font-medium">Configured</span>
+                </div>
               ) : (
                 <button
                   onClick={() => setShowModal({ type: type.id })}
-                  className="text-blue-600 text-sm hover:underline"
+                  className="text-primary text-sm font-medium hover:underline"
                 >
-                  Setup {type.name}
+                  Setup {type.name} →
                 </button>
               )}
             </div>
@@ -101,66 +126,86 @@ export default function Channels() {
       </div>
 
       {/* Channel List */}
-      {channels.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {channels.map(channel => (
-            <div key={channel.id} className="bg-white rounded-xl shadow p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center">
-                  <span className="text-2xl mr-3">{getTypeInfo(channel.type)?.icon}</span>
-                  <div>
-                    <h3 className="font-semibold">{channel.name}</h3>
-                    <p className="text-sm text-gray-600 capitalize">{channel.type}</p>
+      {channels.length > 0 ? (
+        <div>
+          <h2 className="text-xl font-display font-semibold text-gray-900 mb-4">Active Channels</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {channels.map(channel => (
+              <div key={channel.id} className="card card-hover p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center text-2xl mr-3">
+                      {getTypeInfo(channel.type)?.icon}
+                    </div>
+                    <div>
+                      <h3 className="font-display font-semibold text-gray-900">{channel.name}</h3>
+                      <p className="text-sm text-gray-600 capitalize">{channel.type}</p>
+                    </div>
                   </div>
+                  <button
+                    onClick={() => handleToggle(channel)}
+                    className="transition-smooth"
+                  >
+                    {channel.enabled ? (
+                      <ToggleRight className="w-10 h-10 text-success-600" />
+                    ) : (
+                      <ToggleLeft className="w-10 h-10 text-gray-400" />
+                    )}
+                  </button>
                 </div>
-                <button onClick={() => handleToggle(channel)}>
-                  {channel.enabled ? (
-                    <ToggleRight className="w-8 h-8 text-green-600" />
-                  ) : (
-                    <ToggleLeft className="w-8 h-8 text-gray-400" />
-                  )}
-                </button>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setEditingChannel(channel)}
+                    className="btn btn-secondary flex-1 flex items-center justify-center"
+                  >
+                    <Edit className="w-4 h-4 mr-2" /> Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(channel.id)}
+                    className="p-2 border-2 border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-smooth"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
-              <div className="flex space-x-2 mt-4">
-                <button
-                  onClick={() => setEditingChannel(channel)}
-                  className="flex-1 px-3 py-2 border rounded hover:bg-gray-50 flex items-center justify-center"
-                >
-                  <Edit className="w-4 h-4 mr-2" /> Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(channel.id)}
-                  className="px-3 py-2 border border-red-200 text-red-600 rounded hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="card p-12 text-center">
+          <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+          <h3 className="text-lg font-display font-semibold text-gray-900 mb-2">No channels configured</h3>
+          <p className="text-gray-600 mb-6">Add your first messaging channel to get started</p>
+          <button
+            onClick={() => setShowModal(true)}
+            className="btn btn-primary inline-flex items-center"
+          >
+            <Plus className="w-5 h-5 mr-2" /> Add Channel
+          </button>
         </div>
       )}
 
       {/* Modal */}
       {(showModal || editingChannel) && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-lg">
-            <h3 className="text-xl font-semibold mb-4">
+        <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="card w-full max-w-lg p-6 animate-slide-in">
+            <h3 className="text-xl font-display font-bold text-gray-900 mb-6">
               {editingChannel ? 'Edit Channel' : 'Add Channel'}
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border rounded"
+                  className="input"
                   defaultValue={editingChannel?.name}
                   placeholder="My Telegram Bot"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
                 <select
-                  className="w-full px-3 py-2 border rounded"
+                  className="input"
                   defaultValue={editingChannel?.type || showModal?.type}
                 >
                   {types.map(t => (
@@ -168,13 +213,12 @@ export default function Channels() {
                   ))}
                 </select>
               </div>
-              {/* Dynamic fields based on type */}
               {(!showModal || showModal?.type === 'telegram') && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">Bot Token</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Bot Token</label>
                   <input
                     type="password"
-                    className="w-full px-3 py-2 border rounded"
+                    className="input"
                     placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
                   />
                 </div>
@@ -183,13 +227,13 @@ export default function Channels() {
             <div className="flex space-x-3 mt-6">
               <button
                 onClick={() => { setShowModal(false); setEditingChannel(null); }}
-                className="flex-1 px-4 py-2 border rounded hover:bg-gray-50"
+                className="btn btn-secondary flex-1"
               >
                 Cancel
               </button>
               <button
                 onClick={() => { setShowModal(false); setEditingChannel(null); }}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="btn btn-primary flex-1"
               >
                 {editingChannel ? 'Update' : 'Add'}
               </button>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { logsApi } from '../services/api';
-import { RefreshCw, Download, Search, Trash2 } from 'lucide-react';
+import { RefreshCw, Download, Search, FileText } from 'lucide-react';
 
 export default function Logs() {
   const [logs, setLogs] = useState('');
@@ -49,17 +49,18 @@ export default function Logs() {
     : logs;
 
   return (
-    <div className="space-y-4 h-full flex flex-col">
+    <div className="space-y-6 h-full flex flex-col animate-fade-in">
+      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Logs</h1>
-          <p className="text-gray-600">View OpenClaw application logs</p>
+          <h1 className="text-3xl font-display font-bold text-gray-900 mb-2">Logs</h1>
+          <p className="text-gray-600">View OpenClaw application logs in real-time</p>
         </div>
         <div className="flex items-center space-x-3">
           <select
             value={lines}
             onChange={(e) => setLines(Number(e.target.value))}
-            className="px-3 py-2 border rounded-lg"
+            className="input py-2"
           >
             <option value={50}>50 lines</option>
             <option value={100}>100 lines</option>
@@ -68,20 +69,20 @@ export default function Logs() {
           </select>
           <button
             onClick={() => setAutoRefresh(!autoRefresh)}
-            className={`px-3 py-2 rounded-lg flex items-center ${autoRefresh ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}
+            className={`btn flex items-center ${autoRefresh ? 'btn-primary' : 'btn-secondary'}`}
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
             Auto
           </button>
           <button
             onClick={loadLogs}
-            className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+            className="btn btn-ghost"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-5 h-5" />
           </button>
           <button
             onClick={handleDownload}
-            className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center"
+            className="btn btn-secondary flex items-center"
           >
             <Download className="w-4 h-4 mr-2" /> Download
           </button>
@@ -90,22 +91,27 @@ export default function Logs() {
 
       {/* Filter */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         <input
           type="text"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="Filter logs..."
-          className="w-full pl-10 pr-4 py-2 border rounded-lg"
+          className="input pl-12"
         />
       </div>
 
       {/* Log Viewer */}
-      <div className="flex-1 bg-gray-900 rounded-xl p-4 overflow-hidden min-h-[500px]">
+      <div className="flex-1 bg-gray-900 rounded-xl p-6 overflow-hidden min-h-[500px] card border-2 border-gray-800">
         {loading ? (
-          <div className="text-gray-400">Loading logs...</div>
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <FileText className="w-12 h-12 mx-auto mb-3 text-gray-600 animate-pulse" />
+              <p className="text-gray-400">Loading logs...</p>
+            </div>
+          </div>
         ) : (
-          <pre className="text-green-400 text-sm font-mono overflow-auto h-full whitespace-pre-wrap">
+          <pre className="text-green-400 text-sm font-mono overflow-auto h-full whitespace-pre-wrap leading-relaxed">
             {filteredLogs || 'No logs available'}
           </pre>
         )}

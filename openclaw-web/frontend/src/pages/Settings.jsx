@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { configApi, systemApi, authApi } from '../services/api';
-import { Save, RotateCcw, Key, Terminal, Shield, Bell } from 'lucide-react';
+import { Save, Key, Terminal, Shield, Info } from 'lucide-react';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general');
@@ -66,54 +66,70 @@ export default function Settings() {
   const tabs = [
     { id: 'general', label: 'General', icon: Terminal },
     { id: 'security', label: 'Security', icon: Shield },
-    { id: 'paths', label: 'Paths', icon: Key },
+    { id: 'paths', label: 'System', icon: Info },
   ];
 
   if (loading) {
-    return <div className="p-6">Loading...</div>;
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+        <div className="card p-6 animate-pulse">
+          <div className="h-6 bg-gray-200 rounded mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in">
+      {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Settings</h1>
+        <h1 className="text-3xl font-display font-bold text-gray-900 mb-2">Settings</h1>
         <p className="text-gray-600">Configure OpenClaw Web Dashboard</p>
       </div>
 
-      <div className="flex border-b">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center px-6 py-3 border-b-2 font-medium ${activeTab === tab.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-          >
-            <tab.icon className="w-4 h-4 mr-2" />
-            {tab.label}
-          </button>
-        ))}
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="flex space-x-8">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center px-1 py-4 border-b-2 font-medium transition-smooth ${
+                activeTab === tab.id
+                  ? 'border-primary text-primary-700'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <tab.icon className="w-4 h-4 mr-2" />
+              {tab.label}
+            </button>
+          ))}
+        </nav>
       </div>
 
       {/* General Settings */}
       {activeTab === 'general' && (
-        <div className="bg-white rounded-xl shadow p-6 space-y-6">
+        <div className="card p-6 space-y-6">
           <div>
-            <h3 className="text-lg font-semibold mb-4">OpenClaw Configuration</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 className="text-lg font-display font-semibold text-gray-900 mb-4">OpenClaw Configuration</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium mb-1">App Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">App Name</label>
                 <input
                   type="text"
                   value={config.app?.name || ''}
                   onChange={(e) => setConfig({ ...config, app: { ...config.app, name: e.target.value } })}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="input"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Log Level</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Log Level</label>
                 <select
                   value={config.app?.log_level || 'info'}
                   onChange={(e) => setConfig({ ...config, app: { ...config.app, log_level: e.target.value } })}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="input"
                 >
                   <option value="debug">Debug</option>
                   <option value="info">Info</option>
@@ -124,11 +140,11 @@ export default function Settings() {
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-4 border-t border-gray-200">
             <button
               onClick={handleSaveConfig}
               disabled={saving}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
+              className="btn btn-primary flex items-center disabled:opacity-50"
             >
               <Save className="w-4 h-4 mr-2" />
               {saving ? 'Saving...' : 'Save Changes'}
@@ -139,40 +155,40 @@ export default function Settings() {
 
       {/* Security Settings */}
       {activeTab === 'security' && (
-        <div className="bg-white rounded-xl shadow p-6 space-y-6">
+        <div className="card p-6 space-y-6">
           <div>
-            <h3 className="text-lg font-semibold mb-4">Change Password</h3>
+            <h3 className="text-lg font-display font-semibold text-gray-900 mb-4">Change Password</h3>
             <div className="space-y-4 max-w-md">
               <div>
-                <label className="block text-sm font-medium mb-1">Current Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
                 <input
                   type="password"
                   value={passwordData.current}
                   onChange={(e) => setPasswordData({ ...passwordData, current: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="input"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">New Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
                 <input
                   type="password"
                   value={passwordData.new}
                   onChange={(e) => setPasswordData({ ...passwordData, new: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="input"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Confirm New Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
                 <input
                   type="password"
                   value={passwordData.confirm}
                   onChange={(e) => setPasswordData({ ...passwordData, confirm: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="input"
                 />
               </div>
               <button
                 onClick={handlePasswordChange}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                className="btn btn-primary"
               >
                 Change Password
               </button>
@@ -181,40 +197,42 @@ export default function Settings() {
         </div>
       )}
 
-      {/* Paths Settings */}
+      {/* System Info & Paths */}
       {activeTab === 'paths' && (
-        <div className="bg-white rounded-xl shadow p-6 space-y-6">
-          <h3 className="text-lg font-semibold mb-4">OpenClaw Paths</h3>
-          <div className="space-y-4">
-            {paths && Object.entries(paths).map(([key, value]) => (
-              <div key={key} className="flex items-center justify-between py-3 border-b">
-                <div>
-                  <p className="font-medium capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
-                  <p className="text-sm text-gray-500">{value}</p>
+        <div className="space-y-6">
+          {/* Paths */}
+          <div className="card p-6">
+            <h3 className="text-lg font-display font-semibold text-gray-900 mb-4">OpenClaw Paths</h3>
+            <div className="space-y-3">
+              {paths && Object.entries(paths).map(([key, value]) => (
+                <div key={key} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                  <p className="font-medium text-gray-700 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                  <p className="text-sm text-gray-600 font-mono">{value}</p>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
+          {/* System Information */}
           {systemInfo && (
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold mb-4">System Information</h3>
+            <div className="card p-6">
+              <h3 className="text-lg font-display font-semibold text-gray-900 mb-4">System Information</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-500">Hostname</p>
-                  <p className="font-semibold">{systemInfo.hostname}</p>
+                <div className="p-4 bg-gray-50 rounded-lg border-l-4 border-primary">
+                  <p className="text-xs text-gray-600 font-medium mb-1">Hostname</p>
+                  <p className="font-display font-semibold text-gray-900">{systemInfo.hostname}</p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-500">Platform</p>
-                  <p className="font-semibold">{systemInfo.platform}</p>
+                <div className="p-4 bg-gray-50 rounded-lg border-l-4 border-info-500">
+                  <p className="text-xs text-gray-600 font-medium mb-1">Platform</p>
+                  <p className="font-display font-semibold text-gray-900 capitalize">{systemInfo.platform}</p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-500">Architecture</p>
-                  <p className="font-semibold">{systemInfo.arch}</p>
+                <div className="p-4 bg-gray-50 rounded-lg border-l-4 border-warning-500">
+                  <p className="text-xs text-gray-600 font-medium mb-1">Architecture</p>
+                  <p className="font-display font-semibold text-gray-900">{systemInfo.arch}</p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-500">Uptime</p>
-                  <p className="font-semibold">{Math.floor(systemInfo.uptime / 3600)}h</p>
+                <div className="p-4 bg-gray-50 rounded-lg border-l-4 border-success-500">
+                  <p className="text-xs text-gray-600 font-medium mb-1">Uptime</p>
+                  <p className="font-display font-semibold text-gray-900">{Math.floor(systemInfo.uptime / 3600)}h</p>
                 </div>
               </div>
             </div>
