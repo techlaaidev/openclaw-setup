@@ -14,6 +14,7 @@ export const securityHeaders = {
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameSrc: ["'none'"]
+      // REMOVED: upgradeInsecureRequests - causes HTTPS upgrade on HTTP
     }
   },
   crossOriginEmbedderPolicy: false,
