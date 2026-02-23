@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { providersApi } from '../services/api';
 import { Plus, Edit, Trash2, PlusCircle, Check, Sparkles } from 'lucide-react';
+import ProviderForm from '../components/ProviderForm';
 
 export default function Providers() {
   const [providers, setProviders] = useState([]);
   const [types, setTypes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editingProvider, setEditingProvider] = useState(null);
 
   useEffect(() => {
@@ -48,12 +49,37 @@ export default function Providers() {
 
   const handleTest = async (id) => {
     try {
-      await providersApi.test(id);
-      alert('Provider configuration valid!');
+      const { data } = await providersApi.test(id);
+      alert('Provider configuration valid!\n\n' + JSON.stringify(data.details, null, 2));
     } catch (error) {
       console.error('Test failed:', error);
       alert('Provider test failed: ' + error.message);
     }
+  };
+
+  const handleSave = async (formData) => {
+    try {
+      if (editingProvider) {
+        await providersApi.update(editingProvider.id, formData);
+      } else {
+        await providersApi.create(formData);
+      }
+      setShowForm(false);
+      setEditingProvider(null);
+      loadProviders();
+    } catch (error) {
+      throw new Error(error.response?.data?.error || error.message);
+    }
+  };
+
+  const handleEdit = (provider) => {
+    setEditingProvider(provider);
+    setShowForm(true);
+  };
+
+  const handleAdd = (presetType = null) => {
+    setEditingProvider(presetType);
+    setShowForm(true);
   };
 
   const ProviderCard = ({ provider }) => {
@@ -96,7 +122,7 @@ export default function Providers() {
               <Check className="w-4 h-4 mr-1" /> Test
             </button>
             <button
-              onClick={() => setEditingProvider(provider)}
+              onClick={() => handleEdit(provider)}
               className="btn btn-ghost text-sm py-1.5 px-3"
             >
               <Edit className="w-4 h-4" />
@@ -139,7 +165,7 @@ export default function Providers() {
           <p className="text-gray-600">Configure and manage AI model providers</p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => handleAdd()}
           className="btn btn-primary flex items-center"
         >
           <Plus className="w-5 h-5 mr-2" /> Add Provider
@@ -165,7 +191,7 @@ export default function Providers() {
               </div>
             ) : (
               <button
-                onClick={() => setShowAddModal({ type: 'moonshot', name: 'Kimi' })}
+                onClick={() => handleAdd({ type: 'moonshot', name: 'Kimi' })}
                 className="mt-3 btn btn-primary flex items-center"
               >
                 <PlusCircle className="w-4 h-4 mr-2" /> Add Kimi
@@ -191,7 +217,7 @@ export default function Providers() {
           <h3 className="text-lg font-display font-semibold text-gray-900 mb-2">No providers configured</h3>
           <p className="text-gray-600 mb-6">Add your first AI provider to get started</p>
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={() => handleAdd()}
             className="btn btn-primary inline-flex items-center"
           >
             <Plus className="w-5 h-5 mr-2" /> Add Provider
@@ -199,50 +225,17 @@ export default function Providers() {
         </div>
       )}
 
-      {/* Add/Edit Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="card w-full max-w-md p-6 animate-slide-in">
-            <h3 className="text-xl font-display font-bold text-gray-900 mb-6">
-              {editingProvider ? 'Edit Provider' : 'Add Provider'}
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
-                <input
-                  type="text"
-                  className="input"
-                  defaultValue={editingProvider?.name}
-                  placeholder="My AI Provider"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">API Key</label>
-                <input
-                  type="password"
-                  className="input"
-                  placeholder="Enter API key"
-                />
-              </div>
-            </div>
-            <div className="flex space-x-3 mt-6">
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="btn btn-secondary flex-1"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowAddModal(false);
-                }}
-                className="btn btn-primary flex-1"
-              >
-                {editingProvider ? 'Update' : 'Add'}
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Provider Form Modal */}
+      {showForm && (
+        <ProviderForm
+          provider={editingProvider}
+          types={types}
+          onSave={handleSave}
+          onCancel={() => {
+            setShowForm(false);
+            setEditingProvider(null);
+          }}
+        />
       )}
     </div>
   );

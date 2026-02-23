@@ -5,11 +5,12 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
+import ProviderRegistry from '../services/ProviderRegistry.js';
 
 const router = Router();
 
-// Provider types matching ClawX
-const PROVIDER_TYPES = ['anthropic', 'openai', 'google', 'openrouter', 'moonshot', 'siliconflow', 'ollama', 'custom'];
+// Provider types from registry
+const PROVIDER_TYPES = ProviderRegistry.getAllProviderTypes();
 
 // Validation schemas
 const providerSchema = z.object({
@@ -51,16 +52,7 @@ router.get('/', async (req, res) => {
 // Get provider types
 router.get('/types', (req, res) => {
   res.json({
-    types: [
-      { id: 'anthropic', name: 'Anthropic', icon: '🤖', model: 'Claude', placeholder: 'sk-ant-api03-...', requiresApiKey: true },
-      { id: 'openai', name: 'OpenAI', icon: '💚', model: 'GPT', placeholder: 'sk-proj-...', requiresApiKey: true },
-      { id: 'google', name: 'Google', icon: '🔷', model: 'Gemini', placeholder: 'AIza...', requiresApiKey: true },
-      { id: 'openrouter', name: 'OpenRouter', icon: '🌐', model: 'Multi-Model', placeholder: 'sk-or-v1-...', requiresApiKey: true },
-      { id: 'moonshot', name: 'Moonshot (Kimi)', icon: '🌙', model: 'Kimi', placeholder: 'sk-...', requiresApiKey: true, defaultBaseUrl: 'https://api.moonshot.cn/v1', defaultModelId: 'kimi-k2.5' },
-      { id: 'siliconflow', name: 'SiliconFlow (CN)', icon: '🌊', model: 'Multi-Model', placeholder: 'sk-...', requiresApiKey: true, defaultBaseUrl: 'https://api.siliconflow.cn/v1', defaultModelId: 'Pro/moonshotai/Kimi-K2.5' },
-      { id: 'ollama', name: 'Ollama', icon: '🦙', model: 'Local', placeholder: 'Not required', requiresApiKey: false, defaultBaseUrl: 'http://localhost:11434', showBaseUrl: true, showModelId: true },
-      { id: 'custom', name: 'Custom', icon: '⚙️', model: 'Custom', placeholder: 'API key...', requiresApiKey: true, showBaseUrl: true, showModelId: true }
-    ]
+    types: ProviderRegistry.PROVIDER_TYPE_INFO
   });
 });
 
@@ -101,8 +93,32 @@ router.post('/', async (req, res) => {
     }
 
     const { name, type, baseUrl, model, apiKey, enabled, config } = validation.data;
+
+    // Validate provider configuration
+    const configValidation = ProviderRegistry.validateProviderConfig(type, {
+      apiKey,
+      baseUrl,
+      model,
+    });
+
+    if (!configValidation.valid) {
+      return res.status(400).json({ error: configValidation.error });
+    }
+
     const id = uuidv4();
     const now = new Date().toISOString();
+
+    // Get default values from registry
+    const typeInfo = ProviderRegistry.getProviderTypeInfo(type);
+    const finalBaseUrl = baseUrl || typeInfo?.defaultBaseUrl || null;
+    const finalModel = model || typeInfo?.defaultModelId || ProviderRegistry.getProviderDefaultModel(type);
+
+    // Build OpenClaw provider config
+    const openclawConfig = ProviderRegistry.buildOpenClawProviderConfig(type, {
+      apiKey,
+      baseUrl: finalBaseUrl,
+      model: finalModel,
+    });
 
     // Encrypt API key (simple encoding for demo - use proper encryption in production)
     const apiKeyEncrypted = apiKey ? Buffer.from(apiKey).toString('base64') : null;
@@ -110,7 +126,7 @@ router.post('/', async (req, res) => {
     await db.promisified.run(`
       INSERT INTO providers (id, name, type, base_url, model, api_key_encrypted, enabled, config, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, id, name, type, baseUrl || null, model || null, apiKeyEncrypted, enabled ? 1 : 0, config ? JSON.stringify(config) : null, now, now);
+    `, id, name, type, finalBaseUrl, finalModel, apiKeyEncrypted, enabled ? 1 : 0, JSON.stringify(openclawConfig), now, now);
 
     res.json({ success: true, id, message: 'Provider created' });
   } catch (error) {
@@ -204,9 +220,39 @@ router.post('/:id/test', async (req, res) => {
       return res.status(404).json({ error: 'Provider not found' });
     }
 
-    // In a real implementation, this would test the API key
-    // For now, just return success if provider exists
-    res.json({ success: true, message: 'Provider configuration valid' });
+    // Validate provider has required fields
+    const typeInfo = ProviderRegistry.getProviderTypeInfo(provider.type);
+    if (!typeInfo) {
+      return res.status(400).json({ error: 'Invalid provider type' });
+    }
+
+    // Check API key if required
+    if (typeInfo.requiresApiKey && !provider.api_key_encrypted) {
+      return res.status(400).json({ error: 'API key is required for this provider' });
+    }
+
+    // Check base URL if required
+    if (typeInfo.showBaseUrl && !provider.base_url) {
+      return res.status(400).json({ error: 'Base URL is required for this provider' });
+    }
+
+    // Check model if required
+    if (typeInfo.showModelId && !provider.model) {
+      return res.status(400).json({ error: 'Model ID is required for this provider' });
+    }
+
+    // In a real implementation, this would test the API connection
+    // For now, just validate configuration
+    res.json({
+      success: true,
+      message: 'Provider configuration valid',
+      details: {
+        type: provider.type,
+        hasApiKey: !!provider.api_key_encrypted,
+        baseUrl: provider.base_url,
+        model: provider.model,
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
