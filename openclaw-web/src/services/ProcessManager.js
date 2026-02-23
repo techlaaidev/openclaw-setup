@@ -299,12 +299,22 @@ export class ProcessManager {
    */
   async isRunning() {
     try {
-      // Check for openclaw gateway process specifically
-      // Exclude nodemon, vite, and other openclaw-web processes
-      const { stdout } = await execAsync('pgrep -f "openclaw.gateway|openclaw gateway"');
-      const pids = stdout.trim().split('\n').filter(p => p);
-      return pids.length > 0 ? pids : false;
+      // Check if OpenClaw gateway is listening on port 18789
+      // This is more reliable than pgrep as it checks actual port binding
+      const { stdout } = await execAsync('lsof -i :18789 | grep LISTEN');
+
+      if (stdout.trim()) {
+        // Extract PIDs from lsof output
+        const pids = stdout.split('\n')
+          .map(line => line.trim().split(/\s+/)[1])
+          .filter(pid => pid && pid !== 'PID');
+
+        return pids.length > 0 ? pids : false;
+      }
+
+      return false;
     } catch {
+      // lsof returns non-zero exit code if no process found
       return false;
     }
   }
