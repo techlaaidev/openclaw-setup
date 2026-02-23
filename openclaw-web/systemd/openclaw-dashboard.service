@@ -1,0 +1,32 @@
+[Unit]
+Description=OpenClaw Web Dashboard
+Documentation=https://github.com/yourusername/openclaw-web
+After=network.target
+
+[Service]
+Type=simple
+User=openclaw
+Group=openclaw
+WorkingDirectory=/opt/openclaw-web
+Environment="NODE_ENV=production"
+Environment="PORT=3000"
+Environment="OPENCLAW_PATH=/home/openclaw/.openclaw"
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=openclaw-web
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/openclaw-web/data /opt/openclaw-web/sessions /home/openclaw/.openclaw
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,27 @@
+[Unit]
+Description=OpenClaw Web Dashboard
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/openclaw-web
+Environment="NODE_ENV=production"
+Environment="PORT=3000"
+Environment="OPENCLAW_PATH=/root/.openclaw"
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+RestartSec=10
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=openclaw-web
+
+[Install]
+WantedBy=multi-user.target
